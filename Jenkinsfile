@@ -28,7 +28,7 @@ pipeline {
         stage('Push Docker Images to Docker Hub') {
          
             environment{
-                        DOCKER_HUB = credentials('credential-mmpd'')
+                        DOCKER_HUB = credentials('credential-mmpd')
                        }
             steps {
                 script {
