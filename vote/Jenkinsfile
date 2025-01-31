@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Docker Hub credentials
+        DOCKER_HUB_CREDENTIALS = 'dockerhub_credentials'  // Nom de votre credential Docker Hub dans Jenkins
+        IMAGE_NAME = 'diallo2910/voting-app'              // Nom de l'image Docker
+        IMAGE_TAG = 'v1.0'                               // Tag de l'image
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Cloner le code du repository
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Construire l'image Docker
+                    sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    // Se connecter à Docker Hub avec les credentials
+                    withCredentials([usernamePassword(credentialsId: DOCKER_HUB_CREDENTIALS, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                    }
+                }
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                script {
+                    // Pousser l'image vers Docker Hub
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                script {
+                    // Implémentez ici votre logique de déploiement (par exemple, déployer sur un serveur ou Kubernetes)
+                    echo "Deploying application..."
+                    // Exemple: sh './deploy.sh'
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Nettoyage après exécution
+            echo 'Pipeline finished.'
+        }
+    }
+}

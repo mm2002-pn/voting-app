@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  vote:
+    build: ./vote
+    ports:
+      - "5000:80"
+    networks:
+      - frontend
+    depends_on:
+      - db
+
+  result:
+    build: ./result
+    ports:
+      - "5001:80"
+    networks:
+      - backend
+    depends_on:
+      - db
+
+  worker:
+    build: ./worker
+    networks:
+      - backend
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: voting
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - backend
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always   
+
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - backend
+    ports:
+      - "6379:6379"
+
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+
+volumes:
+  postgres_data:
+    driver: local
