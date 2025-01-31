@@ -1,50 +1,59 @@
 pipeline {
     agent any
-
     environment {
-        REGISTRY = 'your_dockerhub_username'
-        IMAGE_NAME = 'voting-app'
-        VERSION = 'latest'
+        DOCKER_IMAGE_VOTE = "diallo2910/voting-app_vote:latest"
+        DOCKER_IMAGE_RESULT = "diallo2910/voting-app_result:latest"
+        DOCKER_IMAGE_WORKER = "diallo2910/voting-app_worker:latest"
     }
-
     stages {
-        stage('Build Images') {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/mm2002-pn/voting-app.git'
+            }
+        }
+        stage('Build Docker Images') {
             steps {
                 script {
-                    // Construire les images Docker pour chaque service
-                    sh 'docker-compose build'
+                    sh 'docker build -t ${DOCKER_IMAGE_VOTE} ./vote'
+                    sh 'docker build -t ${DOCKER_IMAGE_RESULT} ./result'
+                    sh 'docker build -t ${DOCKER_IMAGE_WORKER} ./worker'
                 }
             }
         }
 
-        stage('Push Images to Docker Hub') {
+        stage('Login to Docker Hub') {
             steps {
                 script {
-                    // Tagger et pousser les images
-                    sh "docker tag voting-app_vote ${REGISTRY}/${IMAGE_NAME}_vote:${VERSION}"
-                    sh "docker tag voting-app_result ${REGISTRY}/${IMAGE_NAME}_result:${VERSION}"
-                    sh "docker tag voting-app_worker ${REGISTRY}/${IMAGE_NAME}_worker:${VERSION}"
-
-                    sh "docker push ${REGISTRY}/${IMAGE_NAME}_vote:${VERSION}"
-                    sh "docker push ${REGISTRY}/${IMAGE_NAME}_result:${VERSION}"
-                    sh "docker push ${REGISTRY}/${IMAGE_NAME}_worker:${VERSION}"
+                    sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
                 }
             }
         }
 
+
+        stage('Push Docker Images to Docker Hub') {
+            steps {
+                script {
+                    sh 'docker push ${DOCKER_IMAGE_VOTE}'
+                    sh 'docker push ${DOCKER_IMAGE_RESULT}'
+                    sh 'docker push ${DOCKER_IMAGE_WORKER}'
+                }
+            }
+        }
         stage('Deploy with Docker Compose') {
             steps {
                 script {
-                    // Démarrer les conteneurs via Docker Compose
+                    sh 'docker-compose down'
                     sh 'docker-compose up -d'
                 }
             }
         }
     }
-
     post {
-        always {
-            cleanWs()
+        success {
+            echo 'Deployment Successful!'
+        }
+        failure {
+            echo 'Deployment Failed!'
         }
     }
 }
