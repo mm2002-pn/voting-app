@@ -26,8 +26,13 @@ pipeline {
        
 
         stage('Push Docker Images to Docker Hub') {
+         
+            environment{
+                        DOCKER_HUB = credentials('credential-mmpd'')
+                       }
             steps {
                 script {
+                    sh 'echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR} --password-stdin'
                     sh 'docker push ${DOCKER_IMAGE_VOTE}'
                     sh 'docker push ${DOCKER_IMAGE_RESULT}'
                     sh 'docker push ${DOCKER_IMAGE_WORKER}'
