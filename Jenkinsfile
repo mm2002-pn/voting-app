@@ -4,6 +4,8 @@ pipeline {
         DOCKER_IMAGE_VOTE = "diallo2910/voting-app_vote:latest"
         DOCKER_IMAGE_RESULT = "diallo2910/voting-app_result:latest"
         DOCKER_IMAGE_WORKER = "diallo2910/voting-app_worker:latest"
+        DOCKER_CREDENTIALS = 'dockerhub-creds'  
+
     }
     stages {
         stage('Checkout') {
